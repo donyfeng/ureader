@@ -9,7 +9,7 @@ class Application(tk.Frame):
         self.pagelines = 20
         self.currentline=1
         self.endoffile = 0
-        self.encoding = 'utf-8'
+        self.encoding = 'gbk'
         self.linelength = 20
         self.errorno = 0
 
@@ -33,47 +33,47 @@ class Application(tk.Frame):
         self.endoffile = 0
         self.text.delete('1.0','%d.end'%self.pagelines)
         for i in range(self.pagelines):
-            line = self.readline()
-            if line:
-                self.text.insert('%d.0'%(i+1),str(self.currentline)+'\t'+line)
+            line = self.readline() 
+            if not line.isspace():
+                self.text.insert('%d.0'%(i+1),line)
                 self.currentline += 1
-            else:
-                self.endoffile = 1
     
     def next(self):
         if self.endoffile == 0:
             self.text.delete('1.0','%d.end'%self.pagelines)
             for i in range(self.pagelines):
-                line = self.readline()
+                line = self.readline() + '\n'
                 if line:
-                    self.text.insert('%d.0'%(i+1),str(self.currentline)+'\t'+line)
+                    self.text.insert('%d.0'%(i+1),line)
                     self.currentline += 1
-                else:
-                    self.endoffile = 1
 
     def readline(self):
         line = ''
-        while 1:
-            c = self.fp.read(1)
-            a = ''
-            try:
-                a = c.decode(self.encoding)
-            except:
-                c += self.fp.read(1)
-                try:
-                    a = c.decode(self.encoding)
-                except:
-                    self.errorno += 1
-                    a = '??'
-                line += a
+        for j in range(self.linelength):
+            char = self.DecodeChar()
+            if char == '\n':
+                break
             else:
-                line += a
-            if len(line) >= self.linelength or a == '\n':
-                if a == '\n':
-                    return line
-                else:
-                    return line+'\n'
+                line += char
+        return line
 
+    def DecodeChar(self):
+        data = self.fp.read(1)
+        decode_flag = 0
+        while decode_flag == 0:
+            try:
+                char = data.decode(self.encoding)
+            except UnicodeError as E:
+                if E.reason == "incomplete multibyte sequence":
+                    data += self.fp.read(1)
+                else:
+                    decode_flag = 2
+            else:
+                decode_flag = 1
+        if decode_flag == 1:
+            return char
+        elif decode_flag == 2:
+            return error_char
 
 if __name__ == '__main__':
 
