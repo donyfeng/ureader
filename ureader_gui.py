@@ -98,7 +98,8 @@ class Ureader:
     def decode_char(self):
         decode_flag = 0
         data =self.fp.read(1)
-
+        if not data:
+            return
         while decode_flag == 0:
             try:
                 char = data.decode(self.encoding)
@@ -121,7 +122,10 @@ class Ureader:
             while not line or line.isspace():
                 for j in range(self.columnnum):
                     char = self.decode_char()
-                    if char == '\n':
+                    if not char:
+                        self.text.insert(END,'='*10+'End Of File'+'='*10)
+                        return
+                    elif char == '\n':
                         break
                     else:
                         line += char
